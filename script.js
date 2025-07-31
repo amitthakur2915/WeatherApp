@@ -1,18 +1,39 @@
 const apiKey = "1c2f17034e3646990422b80769f90b79";
-const city = "delhi";
-const link = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`;
+let currentCity = "Delhi"; // Default city
 
-const request = new XMLHttpRequest();
-request.open("GET", link, true);
-request.onload = function () {
-  if (request.status >= 200 && request.status < 400) {
-    const obj = JSON.parse(this.response);
-    document.getElementById("weather").innerHTML = obj.weather[0].description;
-    document.getElementById("location").innerHTML = obj.name;
-    document.getElementById("temp").innerHTML = Math.round(obj.main.temp - 273.15);
-    document.getElementById("icon").src = "https://openweathermap.org/img/w/" + obj.weather[0].icon + ".png";
-  } else {
-    console.log("The city data is not available");
-  }
+window.onload = function () {
+  getWeather(currentCity);
 };
-request.send();
+
+function getWeather(cityName = "") {
+  const cityInput = document.getElementById("cityInput").value.trim();
+  const city = cityName || cityInput || currentCity;
+
+  if (!city) {
+    alert("Please enter a city name.");
+    return;
+  }
+
+  const link = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`;
+
+  fetch(link)
+    .then(response => {
+      if (!response.ok) throw new Error("City not found");
+      return response.json();
+    })
+    .then(data => {
+      currentCity = data.name;
+      document.getElementById("weather").innerText = data.weather[0].description;
+      document.getElementById("location").innerText = data.name;
+      document.getElementById("temp").innerText = Math.round(data.main.temp - 273.15);
+      document.getElementById("icon").src = `https://openweathermap.org/img/w/${data.weather[0].icon}.png`;
+    })
+    .catch(error => {
+      alert("City not found. Please enter a valid city name.");
+      console.error(error);
+    });
+}
+
+function refreshWeather() {
+  getWeather(currentCity);
+}
